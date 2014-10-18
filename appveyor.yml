@@ -1,25 +1,53 @@
+# NOTE: Only Windows Server 2012 supported at this time
+os: Windows Server 2012
+
+# NOTE: That platform relates to msbuild NOT the host OS platform
 platform:
-    - x86
+    - Win32    
+configuration:
+    - Release
+
+# Use shallow clone for speed as we only need the last commit to build     
+shallow_clone: true
+clone_depth: 1
 
 environment:
     global:
         CYG_ROOT: C:/cygwin
-        CYG_MIRROR: http://cygwin.uib.no
+#        CYG_MIRROR: http://cygwin.uib.no
         CYG_CACHE: C:/cygwin/var/cache/setup
-    matrix:
-        - 
-            CYG_ARCH: x86
+        INSTALL_FOLDER: C:\monoinstall
+#    matrix:
+#        - 
+#            CYG_ARCH: x86
+
+# Only build specific branches as master is unlikely to build
+branches:
+    only:
+      - mono-3.10.0-branch
 
 init:
+    - 'echo Building Mono for Windows'
     - 'echo System architecture: %PLATFORM%'
 
 install:
-    - 'appveyor DownloadFile http://cygwin.com/setup-%CYG_ARCH%.exe -FileName setup.exe'
-    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P make -P git -P gcc-core -P ocaml -P ocaml-camlp4 -P ocaml-compiler-libs -P curl -P libncurses-devel -P m4 -P unzip >NUL'
-    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P libmpfr-devel -P patch -P flexdll >NUL'
+    - 'echo Retrieving Cygwin'
+    - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
+    - 'echo Setting up Cygwin dependencies'
+#    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config'
+    - 'setup.exe -qnNd -R "%CYG_ROOT%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config'
+    - 'echo Check Cygwin setup'
     - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
 
+# NOTE: Mono msbuild doesn't work at present so use Cygwin to build
+#build:
+#    project: C:\projects\mono\msvc\mono.sln 
+#    verbosity: detailed
+
 build_script:
-    - '%CYG_ROOT%/bin/bash -lc "cd \"$OLDPWD\" && env DJDIR="workaround" ./configure && make lib-ext && make && make install"'
-    - '%CYG_ROOT%/bin/bash -lc "opam init -y -a"'
-    - '%CYG_ROOT%/bin/bash -lc "opam install -y -v lwt"'
+    - 'echo Cygwin root is: %CYG_ROOT%'
+    - 'echo Build folder is: %APPVEYOR_BUILD_FOLDER%'
+    - 'echo Installation folder is: %INSTALL_FOLDER%'
+    - 'echo Autogen running...'
+    - '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ./autogen.sh --prefix=$INSTALL_FOLDER --with-preview=yes"'
+
