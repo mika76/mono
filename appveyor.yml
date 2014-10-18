@@ -35,7 +35,7 @@ init:
     - 'git config --global core.autocrlf false'
 
 install:
-    - 'echo Retrieving Cygwin'
+    - 'echo Retrieving Cygwin '
     - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
     - 'echo Setting up Cygwin dependencies'
     - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config > NUL' 
