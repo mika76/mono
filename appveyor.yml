@@ -14,7 +14,7 @@ clone_depth: 1
 environment:
     global:
         CYG_ROOT: C:/cygwin
-#        CYG_MIRROR: http://cygwin.uib.no
+        CYG_MIRROR: http://cygwin.mirror.constant.com
         CYG_CACHE: C:/cygwin/var/cache/setup
         INSTALL_FOLDER: C:\monoinstall
 #    matrix:
@@ -34,8 +34,7 @@ install:
     - 'echo Retrieving Cygwin'
     - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
     - 'echo Setting up Cygwin dependencies'
-#    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config'
-    - 'setup.exe -qnNd -R "%CYG_ROOT%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config'
+    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config'
     - 'echo Check Cygwin setup'
     - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
 
