@@ -39,10 +39,10 @@ install:
     - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config >NUL'
     - 'echo Check Cygwin setup'
     - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
-    - 'echo Retrieving NSIS packager'
-    - 'appveyor DownloadFile http://heanet.dl.sourceforge.net/project/nsis/NSIS%202/2.46/nsis-2.46-setup.exe -FileName nsissetup.exe'
-    - 'echo Installing NSIS'
-    - 'nsissetup.exe /S /D=%NSIS_INSTALL_FOLDER%'
+#    - 'echo Retrieving NSIS packager'
+#    - 'appveyor DownloadFile http://heanet.dl.sourceforge.net/project/nsis/NSIS%202/2.46/nsis-2.46-setup.exe -FileName nsissetup.exe'
+#    - 'echo Installing NSIS'
+#    - 'nsissetup.exe /S /D=%NSIS_INSTALL_FOLDER%'
 
 # NOTE: Mono msbuild doesn't work at present so use Cygwin to build
 #build:
