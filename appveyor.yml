@@ -16,7 +16,9 @@ environment:
         CYG_ROOT: C:/cygwin
         CYG_MIRROR: http://cygwin.mirror.constant.com
         CYG_CACHE: C:/cygwin/var/cache/setup
-        INSTALL_FOLDER: C:\monoinstall
+        MONO_INSTALL_FOLDER: C:\monoinstall
+        NSIS_INSTALL_FOLDER: C:\nsis
+
 #    matrix:
 #        - 
 #            CYG_ARCH: x86
@@ -37,6 +39,10 @@ install:
     - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-gcc -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config >NUL'
     - 'echo Check Cygwin setup'
     - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
+    - 'echo Retrieving NSIS packager'
+    - 'appveyor DownloadFile http://heanet.dl.sourceforge.net/project/nsis/NSIS%202/2.46/nsis-2.46-setup.exe -FileName nsissetup.exe'
+    - 'echo Installing NSIS'
+    - 'nsissetup.exe /S /D=%NSIS_INSTALL_FOLDER%'
 
 # NOTE: Mono msbuild doesn't work at present so use Cygwin to build
 #build:
@@ -46,10 +52,10 @@ install:
 build_script:
     - 'echo Cygwin root is: %CYG_ROOT%'
     - 'echo Build folder is: %APPVEYOR_BUILD_FOLDER%'
-    - 'echo Installation folder is: %INSTALL_FOLDER%'
-    - 'mkdir %INSTALL_FOLDER'
+    - 'echo Installation folder is: %MONO_INSTALL_FOLDER%'
+    - 'mkdir %MONO_INSTALL_FOLDER%'
     - 'echo Autogen running...'
-    - '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ./autogen.sh --prefix=$INSTALL_FOLDER --with-preview=yes"'
+    - '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ./autogen.sh --prefix=$MONO_INSTALL_FOLDER --with-preview=yes"'
     - 'echo Configure running...'
     - '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ./configure --host=i686-pc-mingw32"'
     - 'echo Make running...'
