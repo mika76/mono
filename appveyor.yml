@@ -1,0 +1,95 @@
+os: Windows Server 2012
+
+# NOTE: That platform relates to msbuild NOT the host OS platform
+platform:
+    - Win32    
+configuration:
+    - Release
+
+# Use build cache for Cygwin installation
+#cache:
+#    - c:\cygwin
+
+# Use shallow clone for speed as we only need the last commit to build     
+shallow_clone: true
+clone_depth: 1
+
+environment:
+    global:
+        CYG_ROOT: C:/cygwin
+        CYG_MIRROR: http://cygwin.mirror.constant.com
+        CYG_CACHE: C:/cygwin/var/cache/setup
+        MONO_INSTALL_FOLDER_WIN: C:\monoinstall
+        MONO_INSTALL_FOLDER_CYG: /cygdrive/c/monoinstall
+        NSIS_INSTALL_FOLDER: C:\nsis
+
+artifacts:
+    - path: monoinstall
+      name: mono-binaries
+      type: zip
+
+# Currently this is/can be set in your Appveyor project under 'Environments'
+#deploy:
+#  provider: AzureBlob
+#  storage_account_name: monoci
+#  storage_access_key:
+#    secure: I_NEED_TO_BE_SET
+#  container: builds
+#  folder: $(APPVEYOR_PROJECT_SLUG)\$(APPVEYOR_BUILD_VERSION)
+#  artifact: mono-binaries
+
+# Only build specific branches for now as master is unlikely to build.
+# NOTE: We also have to change the default branch for UI builds or master will be built
+branches:
+    only:
+      - mono-3.10.0-branch
+
+init:
+    - 'echo Building Mono for Windows'
+    - 'echo System architecture: %PLATFORM%'
+# Ensure we don't try to convert line endings as this will cause build to fail
+    - 'git config --global core.autocrlf false'
+    - 'echo Repo build branch is: %APPVEYOR_REPO_BRANCH%'
+
+install:
+    - 'echo Retrieving Cygwin'
+    - 'appveyor DownloadFile http://cygwin.com/setup-x86.exe -FileName setup.exe'
+    - 'echo Setting up Cygwin dependencies'
+    - 'setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_CACHE%" -P autoconf -P automake -P bison -P gcc-core -P gcc-g++ -P mingw-runtime -P mingw-binutils -P mingw-gcc-core -P mingw-gcc-g++ -P mingw-pthreads -P mingw-w32api -P libtool -P make -P python -P gettext-devel -P gettext -P intltool -P libiconv -P pkg-config -P git  > NUL' 
+    - 'echo Check Cygwin setup'
+    - '%CYG_ROOT%/bin/bash -lc "cygcheck -dc cygwin"'
+# TODO: Next start work on packaging for Windows
+#    - 'echo Retrieving NSIS packager'
+#    - 'appveyor DownloadFile "http://heanet.dl.sourceforge.net/project/nsis/NSIS 2/2.46/nsis-2.46-setup.exe" -FileName nsissetup.exe'
+#    - 'echo Installing NSIS'
+#    - 'nsissetup.exe /S /D=%NSIS_INSTALL_FOLDER%'
+
+# NOTE: Mono msbuild doesn't work at present so use Cygwin to build
+#build:
+#    project: C:\projects\mono\msvc\mono.sln 
+#    verbosity: detailed
+
+# Cygwin build script
+#
+# NOTES:
+#
+# The stdin/stdout file descriptor appears not to be valid for the Appveyor
+# build which causes failures as certain functions attempt to redirect 
+# default file handles. Ensure a dummy file descriptor is opened with exec.
+#
+build_script:
+    - cmd: 'echo Cygwin root is: %CYG_ROOT%'
+    - cmd: 'echo Build folder is: %APPVEYOR_BUILD_FOLDER%'
+    - cmd: 'echo Installation folder is: %MONO_INSTALL_FOLDER_WIN%'
+    - cmd: 'mkdir %MONO_INSTALL_FOLDER_WIN%'
+    - cmd: 'echo Repo build branch is: %APPVEYOR_REPO_BRANCH%'
+    - cmd: 'echo Autogen running...'
+    - cmd: '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; ./autogen.sh --prefix=/cygdrive/c/monoinstall --with-preview=yes || true"'
+    - cmd: 'echo Configure running...'
+    - cmd: '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; ./configure --host=i686-pc-mingw32 || true"'
+    - cmd: 'echo Make running...'
+    - cmd: '%CYG_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make"'
+    - cmd: 'echo Installing...'
+    - cmd: '%CYG_ROOT%/bin/bash -lc "mount $MONO_INSTALL_FOLDER_WIN /usr/local; cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make install; umount /usr/local"'
+    - cmd: 'echo Fixing up installation... [TBD]'
+
